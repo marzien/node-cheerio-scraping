@@ -1,7 +1,11 @@
 const request = require('request');
 const cheerio = require('cheerio');
-const fs = require('fs');
+// const fs = require('fs');
 const now = require("performance-now");
+const sizeOf = require('image-size');
+const url = require('url');
+const https = require('https');
+const http = require('http');
 
 const link = 'https://mariusdev.tech';
 
@@ -81,7 +85,7 @@ request(link, (error, response, html) => {
     $('img').each((i, el) => { //TODO: bigest image
       imgCount += 1;
       const image = $(el).attr('src');
-      // console.log(image)
+      imageSize(image);
     })
     // console.log("Links count: "+ imgCount)
   } else {
@@ -96,7 +100,7 @@ request(link, (error, response, html) => {
 isURLBroken = (fullyQualifiedURL) => {
   const w3validator = 'https://validator.w3.org/nu/?doc=';
   let isBroken = false;
-  console.log(w3validator+fullyQualifiedURL);
+  // console.log(w3validator+fullyQualifiedURL);
   req.get({
     url: w3validator+fullyQualifiedURL,
     headers: {
@@ -122,5 +126,32 @@ isURLBroken = (fullyQualifiedURL) => {
   console.log('isBroken '+isBroken);
   return isBroken;
 });
+
+imageSize = (imgUrl) => {
+  var options = url.parse(link + '/' + imgUrl);
+
+  // if main URL is https
+  if (link.substring(0,5) === 'https') {
+    https.get(options, function (response) {
+      var chunks = [];
+      response.on('data', function (chunk) {
+        chunks.push(chunk);
+      }).on('end', function() {
+        var buffer = Buffer.concat(chunks);
+        console.log(sizeOf(buffer));
+      });
+    });
+  } else { // if main URL is http
+    http.get(options, function (response) {
+      var chunks = [];
+      response.on('data', function (chunk) {
+        chunks.push(chunk);
+      }).on('end', function() {
+        var buffer = Buffer.concat(chunks);
+        console.log(sizeOf(buffer));
+      });
+    });
+  }
+}
 
 };
